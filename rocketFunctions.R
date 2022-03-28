@@ -80,13 +80,6 @@ generate_kernels <- function(n_timepoints, num_kernels, n_columns, seed)
 apply_kernel_univariate <- function(
     X, weights, length, bias, dilation, padding)
 {
-  # X <- c(1,2,3)
-  # weights <- c(0.2, 0.1, 0.6)
-  # length <- 3
-  # bias <- 3
-  # dilation <- 5
-  # padding <- 3
-  
   n_timepoints <- length(X)
   
   output_length <- (n_timepoints + (2 * padding)) - ((length - 1) * dilation)
@@ -127,9 +120,60 @@ apply_kernel_univariate <- function(
   c(ppv/output_length, max1)
 }
 
-fit <- function(X)
+apply_kernel_mulivariate <- function(
+  X, weights, length, bias, dilation,
+  padding, num_channel_indices, channel_indices)
 {
-  dimensions <- dim(worms)
-  kernels <- generate_kernels()
+  # X <- array(c(c(1,2,3), c(2,3,4)), c(3,3))
+  # weights <- array(c(c(0.1,0.2,0.3), c(0.2,0.3,0.4)), c(3,3))
+  # length <- 3
+  # bias <- 3
+  # dilation <- 2
+  # padding <- 4
+  # num_channel_indices <- 3
+  # channel_indices <- c(1,2,3)
   
+  dimensions <- dim(X)
+  
+  n_columns <- dimensions[1]
+  n_timepoints <- dimensions[2]
+  
+  output_length <- (n_timepoints + (2 * padding)) - ((length - 1) * dilation)
+  
+  ppv <- 0
+  max1 <- -Inf
+  
+  end <- (n_timepoints + padding) - ((length - 1) * dilation)
+  
+  for (i in -padding:end-1)
+  {
+    sum1 <- bias
+    
+    index <- i
+    
+    for (j in 1:length)
+    {
+      if (index > -1 & index < n_timepoints)
+      {
+        for (k in 1:num_channel_indices)
+        {
+          sum1 <- sum1 + weights[k, j] * X[channel_indices[k], index+1]
+        }
+      }
+      
+      index <- index + dilation
+    }
+    
+    if (sum1 > max1)
+    {
+      max1 <- sum1
+    }
+    
+    if (sum1 > 0)
+    {
+      ppv <- ppv + 1
+    }
+  }
+  
+  c(ppv/output_length, max1)
 }
