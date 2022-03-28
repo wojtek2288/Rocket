@@ -77,6 +77,56 @@ generate_kernels <- function(n_timepoints, num_kernels, n_columns, seed)
   
 }
 
+apply_kernel_univariate <- function(
+    X, weights, length, bias, dilation, padding)
+{
+  # X <- c(1,2,3)
+  # weights <- c(0.2, 0.1, 0.6)
+  # length <- 3
+  # bias <- 3
+  # dilation <- 5
+  # padding <- 3
+  
+  n_timepoints <- length(X)
+  
+  output_length <- (n_timepoints + (2 * padding)) - ((length - 1) * dilation)
+  
+  ppv <- 0
+  max1 <- -Inf
+  
+  end <- (n_timepoints + padding) - ((length - 1) * dilation)
+  
+  for (i in -padding:end-1)
+  {
+    i <- -padding
+    sum1 <- bias
+    
+    index <- i
+    
+    for (j in 1:length)
+    {
+      if (index > -1 & index < n_timepoints)
+      {
+        sum1 <- sum1 + weights[j] * X[index+1]
+      }
+      
+      index <- index + dilation
+    }
+    
+    if(sum1 > max1)
+    {
+      max1 <- sum1
+    }
+    
+    if (sum1 > 0)
+    {
+      ppv <- ppv + 1
+    }
+  }
+  
+  c(ppv/output_length, max1)
+}
+
 fit <- function(X)
 {
   dimensions <- dim(worms)
