@@ -3,11 +3,6 @@
 
 generate_kernels <- function(n_timepoints, num_kernels, n_columns, seed)
 {
-  num_kernels = 10
-  n_timepoints = 20
-  n_columns = 5
-  seed = 124
-  
   set.seed(seed)
   candidate_lengths <- c(7, 9, 11)
   lengths <- sample(candidate_lengths, num_kernels, replace = TRUE)
@@ -17,7 +12,7 @@ generate_kernels <- function(n_timepoints, num_kernels, n_columns, seed)
   for (i in 1:num_kernels)
   {
     limit <- min(n_columns, lengths[i])
-    num_channel_indices[i] <- 2 ** runif(1, 0, log2(limit + 1))
+    num_channel_indices[i] <- as.integer(2 ** runif(1, 0, log2(limit + 1)))
   }
   
   channel_indices = integer(sum(num_channel_indices))
@@ -28,8 +23,8 @@ generate_kernels <- function(n_timepoints, num_kernels, n_columns, seed)
   dilations <- integer(num_kernels)
   paddings <- integer(num_kernels)
   
-  a1 <- 0
-  a2 <- 0
+  a1 <- 1
+  a2 <- 1
   
   for (i in 1:num_kernels)
   {
@@ -38,43 +33,56 @@ generate_kernels <- function(n_timepoints, num_kernels, n_columns, seed)
     b1 <- a1 + (num_channel_indices[i] * lengths[i])
     b2 <- a2 + num_channel_indices[i]
     
-    a3 <- 0
+    a3 <- 1
     
     for (j in 1:num_channel_indices[i])
     {
       b3 <- a3 + lengths[i]
-      normal_weights[a3+1:b3+1] <- normal_weights[a3+1:b3+1] - mean(normal_weights[a3+1:b3+1])
+      normal_weights[a3:(b3-1)] <- normal_weights[a3:(b3-1)] - mean(normal_weights[a3:(b3-1)])
       
       a3 <- b3
     }
     
-    weights[a1+1:b1+1] <- normal_weights
+    weights[a1:(b1-1)] <- normal_weights
     
-    channel_indices[a2+1:b2+1] <- sample(seq(0, n_columns - 1), num_channel_indices[i])
+    channel_indices[a2:(b2-1)] <- sample(seq(0, n_columns - 1), num_channel_indices[i])
     
     biases[i] <- runif(1, -1, 1)
     
-    dilation <- 2 ** runif(1, 0, log2((n_timepoints - 1)/(lengths[i] - 1)))
-    dilation <- as.integer(dilation)
+    logVal <- log2((n_timepoints - 1)/(lengths[i] - 1))
     
+    if (logVal > 0)
+    {
+      dilation <- 2 ** runif(1, 0, logVal)
+    }
+    else
+    {
+      dilation <- 2 ** runif(1, logVal, 0)
+    }
+    
+    dilation <- as.integer(dilation)
     dilations[i] <- dilation
     
     if (sample(c(0,1), 1) == 0)
     {
-      padding <- as.integer(((lengths[i] - 1) * dilation) / 2)
+      paddings[i] <- as.integer(((lengths[i] - 1) * dilation) / 2)
     }
     else
     {
-      padding <- 0
+      paddings[i] <- 0
     }
-    
-    paddings[i] <- padding
     
     a1 <- b1
     a2 <- b2
   }
   
-  
+  list("weights" = weights,
+       "lengths" = lengths,
+       "biases" = biases,
+       "dilations" = dilations,
+       "paddings" = paddings,
+       "num_channel_indices" = num_channel_indices,
+       "channel_indices" = channel_indices)
 }
 
 apply_kernel_univariate <- function(
@@ -89,7 +97,7 @@ apply_kernel_univariate <- function(
   
   end <- (n_timepoints + padding) - ((length - 1) * dilation)
   
-  for (i in -padding:end-1)
+  for (i in -padding:end)
   {
     i <- -padding
     sum1 <- bias
@@ -117,7 +125,7 @@ apply_kernel_univariate <- function(
     }
   }
   
-  c(ppv/output_length, max1)
+  list("ppv" = ppv/output_length, "max" = max1)
 }
 
 apply_kernel_mulivariate <- function(
@@ -175,5 +183,72 @@ apply_kernel_mulivariate <- function(
     }
   }
   
-  c(ppv/output_length, max1)
+  list("ppv" = ppv/output_length, "max" = max1)
+}
+
+apply_kernels <- function(
+  X,
+  weights,
+  lengths,
+  biases,
+  dilations,
+  paddings,
+  num_channel_indices,
+  channel_indices)
+{
+  dimensions <- dim(X)
+  
+  n_instances <- dimensions[1]
+  n_columns <- dimensions[2]
+  
+  num_kernels = length(lengths)
+  
+  X1 <- array(c(numeric(n_instances), numeric(num_kernels * 2)), 
+              dim = c(n_instances, num_kernels * 2))
+  
+  for (i in 1:n_instances)
+  {
+    a1 <- 1
+    a2 <- 1
+    a3 <- 1
+    
+    for (j in 1:num_kernels)
+    {
+      b1 = a1 + num_channel_indices[j] * lengths[j]
+      b2 = a2 + num_channel_indices[j]
+      b3 = a3 + 2
+      
+      if (num_channel_indices[j] == 1)
+      {
+        X1[i, a3:(b3-1)] <- apply_kernel_univariate(
+          X[i, channel_indices[a2]],
+          weights[a1:(b1-1)],
+          lengths[j],
+          biases[j],
+          dilations[j],
+          paddings[j])
+      }
+      else
+      {
+        weights1 <- array_reshape(weights[a1:(b1 - 1)],
+                                  c(num_channel_indices[j], lengths[j]))
+        
+        X1[i, a3:(b3-1)] = apply_kernel_multivariate(
+          X[i],
+          weights1,
+          lengths[j],
+          biases[j],
+          dilations[j],
+          paddings[j],
+          num_channel_indices[j],
+          channel_indices[a2:(b2-1)])
+      }
+      
+      a1 = b1
+      a2 = b2
+      a3 = b3
+    }
+  }
+  
+  as.numeric(X1)
 }
