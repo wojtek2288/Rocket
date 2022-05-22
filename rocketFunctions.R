@@ -125,22 +125,13 @@ apply_kernel_univariate <- function(
     }
   }
   
-  list("ppv" = ppv/output_length, "max" = max1)
+  c(as.numeric(ppv)/as.numeric(output_length), as.numeric(max1))
 }
 
-apply_kernel_mulivariate <- function(
+apply_kernel_multivariate <- function(
   X, weights, length, bias, dilation,
   padding, num_channel_indices, channel_indices)
 {
-  # X <- array(c(c(1,2,3), c(2,3,4)), c(3,3))
-  # weights <- array(c(c(0.1,0.2,0.3), c(0.2,0.3,0.4)), c(3,3))
-  # length <- 3
-  # bias <- 3
-  # dilation <- 2
-  # padding <- 4
-  # num_channel_indices <- 3
-  # channel_indices <- c(1,2,3)
-  
   dimensions <- dim(X)
   
   n_columns <- dimensions[1]
@@ -165,7 +156,7 @@ apply_kernel_mulivariate <- function(
       {
         for (k in 1:num_channel_indices)
         {
-          sum1 <- sum1 + weights[k, j] * X[channel_indices[k], index+1]
+          sum1 <- sum1 + weights[k, j] * X[channel_indices[k] + 1, index + 1]
         }
       }
       
@@ -183,7 +174,7 @@ apply_kernel_mulivariate <- function(
     }
   }
   
-  list("ppv" = ppv/output_length, "max" = max1)
+  c(ppv/output_length, max1)
 }
 
 apply_kernels <- function(
@@ -208,6 +199,8 @@ apply_kernels <- function(
   
   for (i in 1:n_instances)
   {
+    cat(i, " of ", n_instances, "\n")
+    
     a1 <- 1
     a2 <- 1
     a3 <- 1
@@ -220,21 +213,23 @@ apply_kernels <- function(
       
       if (num_channel_indices[j] == 1)
       {
-        X1[i, a3:(b3-1)] <- apply_kernel_univariate(
-          X[i, channel_indices[a2]],
+        vec <- apply_kernel_univariate(
+          X[i, channel_indices[a2] + 1, ],
           weights[a1:(b1-1)],
           lengths[j],
           biases[j],
           dilations[j],
           paddings[j])
+        
+        X1[c(i), c(a3:(b3-1))] <- vec
       }
       else
       {
         weights1 <- array_reshape(weights[a1:(b1 - 1)],
                                   c(num_channel_indices[j], lengths[j]))
         
-        X1[i, a3:(b3-1)] = apply_kernel_multivariate(
-          X[i],
+        vec <- apply_kernel_multivariate(
+          X[i, , ],
           weights1,
           lengths[j],
           biases[j],
@@ -242,6 +237,8 @@ apply_kernels <- function(
           paddings[j],
           num_channel_indices[j],
           channel_indices[a2:(b2-1)])
+        
+        X1[i, a3:(b3-1)] <- vec
       }
       
       a1 = b1
@@ -250,5 +247,45 @@ apply_kernels <- function(
     }
   }
   
-  as.numeric(X1)
+  X1
+}
+
+transformMatrix <- function(data)
+{
+  data3d <- array(numeric(), c(nrow(data), 2, ncol(data)))
+  
+    for (i in 1:nrow(data))
+    {
+      for (j in 1:ncol(data))
+      {
+        data3d[i, 1, j] <- data[i, j]
+        data3d[i, 2, j] <- data[i, j]
+      }
+    }
+  
+  data3d
+}
+
+rocket <- function ()
+{
+  data <- read.arff("C:\\Users\\User\\Desktop\\Rocket\\ArrowHead_TRAIN.arff")
+  data <- data[, 1:(ncol(data) - 1)]
+  data3d <- transformMatrix(data)
+  
+  kernels <- generate_kernels(ncol(data), 1000, 2, 124)
+  res <- apply_kernels(data3d,kernels[[1]], kernels[[2]], kernels[[3]],
+                       kernels[[4]], kernels[[5]], kernels[[6]], kernels[[7]])
+  
+  write.table(res, file="C:\\Users\\User\\Desktop\\Rocket\\result_train.txt",
+              row.names=F, sep=",")
+  
+  data <- read.arff("C:\\Users\\User\\Desktop\\Rocket\\ArrowHead_TEST.arff")
+  data <- data[, 1:(ncol(data) - 1)]
+  data3d <- transformMatrix(data)
+  
+  res <- apply_kernels(data3d,kernels[[1]], kernels[[2]], kernels[[3]],
+                       kernels[[4]], kernels[[5]], kernels[[6]], kernels[[7]])
+  
+  write.table(res, file="C:\\Users\\User\\Desktop\\Rocket\\result_test.txt",
+              row.names=F, sep=",")
 }
