@@ -1,6 +1,3 @@
-# Infers time series length and number of channels / dimensions 
-# from input DataFrame, and generates random kernels
-
 generate_kernels <- function(n_timepoints, num_kernels, n_columns, seed)
 {
   set.seed(seed)
@@ -38,14 +35,16 @@ generate_kernels <- function(n_timepoints, num_kernels, n_columns, seed)
     for (j in 1:num_channel_indices[i])
     {
       b3 <- a3 + lengths[i]
-      normal_weights[a3:(b3-1)] <- normal_weights[a3:(b3-1)] - mean(normal_weights[a3:(b3-1)])
+      normal_weights[a3:(b3-1)] <-
+        normal_weights[a3:(b3-1)] - mean(normal_weights[a3:(b3-1)])
       
       a3 <- b3
     }
     
     weights[a1:(b1-1)] <- normal_weights
     
-    channel_indices[a2:(b2-1)] <- sample(seq(0, n_columns - 1), num_channel_indices[i])
+    channel_indices[a2:(b2-1)] <-
+      sample(seq(0, n_columns - 1), num_channel_indices[i])
     
     biases[i] <- runif(1, -1, 1)
     
@@ -199,7 +198,7 @@ apply_kernels <- function(
   
   for (i in 1:n_instances)
   {
-    cat(i, " of ", n_instances, "\n")
+    cat(i, "rows out of", n_instances, "\n")
     
     a1 <- 1
     a2 <- 1
@@ -250,42 +249,143 @@ apply_kernels <- function(
   X1
 }
 
-transformMatrix <- function(data)
+readData <- function(dataName, count, trainOrTest)
 {
-  data3d <- array(numeric(), c(nrow(data), 2, ncol(data)))
+  setwd(paste0(getwd(), "/data"))
   
-    for (i in 1:nrow(data))
+  data <- read.arff(paste0(dataName, "Dimension1_", trainOrTest, ".arff"))
+  classes <- data[, ncol(data)]
+  data <- data[, 1:(ncol(data) - 1)]
+  
+  dataSets <- array(numeric(), c(nrow(data), count, ncol(data)))
+  
+  dataSets[, 1, ] <-
+    array(data = c(unlist(data)), dim = c(nrow(data), ncol(data)))
+  
+  if (count > 1)
+  {
+    for (i in 2:count)
     {
-      for (j in 1:ncol(data))
-      {
-        data3d[i, 1, j] <- data[i, j]
-        data3d[i, 2, j] <- data[i, j]
-      }
+      data <-
+        read.arff(paste0(dataName, "Dimension", i, "_", trainOrTest, ".arff"))
+      data <- data[, 1:(ncol(data) - 1)]
+      
+      dataSets[, i, ] <-
+        array(data = c(unlist(data)), dim = c(nrow(data), ncol(data)))
     }
+  }
   
-  data3d
+  list("dataSets" = dataSets, "classes" = classes)
 }
 
-rocket <- function ()
+replaceValues <- function(dataSets, classes, useMean = TRUE)
 {
-  data <- read.arff("C:\\Users\\User\\Desktop\\Rocket\\ArrowHead_TRAIN.arff")
-  data <- data[, 1:(ncol(data) - 1)]
-  data3d <- transformMatrix(data)
+  dims <- dim(dataSets)
   
-  kernels <- generate_kernels(ncol(data), 1000, 2, 124)
-  res <- apply_kernels(data3d,kernels[[1]], kernels[[2]], kernels[[3]],
-                       kernels[[4]], kernels[[5]], kernels[[6]], kernels[[7]])
+  uniqueClasses <- unique(classes)
+  groupedClasses <- table(classes) 
   
-  write.table(res, file="C:\\Users\\User\\Desktop\\Rocket\\result_train.txt",
-              row.names=F, sep=",")
+  for (i in 1:length(uniqueClasses))
+  {
+    val <- as.integer(groupedClasses[[uniqueClasses[i]]] / 3)
+    classCount <- 0
+    for (j in 1:length(classes))
+    {
+      if (classes[j] == uniqueClasses[i])
+      {
+        classCount <- classCount + 1
+        if (classCount < val)
+        {
+          from <- sample(as.integer(dims[3] * 0.1):as.integer(dims[3] * 0.4), 1)
+        }
+        else if (classCount >= val & classCount < 2 * val)
+        {
+          from <- sample(as.integer(dims[3] * 0.4):as.integer(dims[3] * 0.7), 1)
+        }
+        else
+        {
+          from <- sample(as.integer(dims[3] * 0.7):dims[3], 1)
+        }
+        
+        for (k in 1:dims[2])
+        {
+          if (useMean)
+          {
+            dataSets[j, k, from:dims[3]] <-
+              rep(mean(dataSets[j, k, 1:(from - 1)]), dims[3] - from + 1)
+          }
+          else
+          {
+            dataSets[j, k, from:dims[3]] <- numeric(dims[3] - from + 1)
+          }
+        }
+      }
+    }
+  }
   
-  data <- read.arff("C:\\Users\\User\\Desktop\\Rocket\\ArrowHead_TEST.arff")
-  data <- data[, 1:(ncol(data) - 1)]
-  data3d <- transformMatrix(data)
-  
-  res <- apply_kernels(data3d,kernels[[1]], kernels[[2]], kernels[[3]],
-                       kernels[[4]], kernels[[5]], kernels[[6]], kernels[[7]])
-  
-  write.table(res, file="C:\\Users\\User\\Desktop\\Rocket\\result_test.txt",
-              row.names=F, sep=",")
+  dataSets
 }
+
+rocket <- function (dataName, count, kernelCount, seed)
+{
+  library("foreign")
+  library("reticulate")
+  cat(paste0(getwd(), "/data"))
+  setwd(paste0(getwd(), "/data"))
+  
+  trainDataSets <- readData(dataName, count, "TRAIN")
+  testDataSets <- readData(dataName, count, "TEST")
+  
+  for (i in 1:10)
+  {
+    cat("Iteration", i, "of 10 \n")
+    dir.create(paste0(getwd(), "/results"),
+               showWarnings = FALSE)
+    
+    setwd(paste0(getwd(), "/results"))
+    meanDataSets <- replaceValues(trainDataSets[[1]], trainDataSets[[2]], TRUE)
+    
+    write.table(trainDataSets[[2]], file=paste0(i, "_Y_TRAIN.txt"),
+                row.names=F, sep=",")
+    
+    kernels <- generate_kernels(dim(trainDataSets[[1]])[3], kernelCount,
+                                count, seed)
+    
+    cat("Train data set: \n")
+    cat("Mean train data set: \n")
+    
+    res <- apply_kernels(meanDataSets, kernels[[1]], kernels[[2]], kernels[[3]],
+                         kernels[[4]], kernels[[5]], kernels[[6]], kernels[[7]])
+    
+    write.table(res, file=paste0(i, "_Result_TRAIN.txt"),
+                row.names=F, sep=",")
+    
+    meanDataSets <- replaceValues(testDataSets[[1]], testDataSets[[2]], TRUE)
+    
+    write.table(testDataSets[[2]], file=paste0(i, "_Y_TEST.txt"),
+                row.names=F, sep=",")
+    
+    cat("Test data set: \n")
+    cat("Mean test data set: \n")
+    
+    res <- apply_kernels(meanDataSets, kernels[[1]], kernels[[2]], kernels[[3]],
+                         kernels[[4]], kernels[[5]], kernels[[6]], kernels[[7]])
+    
+    write.table(res, file=paste0(i, "_Result_TEST.txt"),
+                row.names=F, sep=",") 
+  }
+}
+
+args = commandArgs(trailingOnly=TRUE)
+
+if (length(args) != 4)
+{
+  stop("4 arguments must be supplied", call.=FALSE)
+}
+
+rocket(args[1], strtoi(args[2]), strtoi(args[3]), strtoi(args[4]))
+
+
+
+
+
