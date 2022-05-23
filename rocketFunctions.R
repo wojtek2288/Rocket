@@ -251,8 +251,6 @@ apply_kernels <- function(
 
 readData <- function(dataName, count, trainOrTest)
 {
-  setwd(paste0(getwd(), "/data"))
-  
   data <- read.arff(paste0(dataName, "Dimension1_", trainOrTest, ".arff"))
   classes <- data[, ncol(data)]
   data <- data[, 1:(ncol(data) - 1)]
@@ -330,8 +328,7 @@ rocket <- function (dataName, count, kernelCount, seed)
 {
   library("foreign")
   library("reticulate")
-  cat(paste0(getwd(), "/data"))
-  setwd(paste0(getwd(), "/data"))
+  setwd(gsub("/", "\\\\\\\\", paste0(getwd(), "/data")))
   
   trainDataSets <- readData(dataName, count, "TRAIN")
   testDataSets <- readData(dataName, count, "TEST")
@@ -342,7 +339,8 @@ rocket <- function (dataName, count, kernelCount, seed)
     dir.create(paste0(getwd(), "/results"),
                showWarnings = FALSE)
     
-    setwd(paste0(getwd(), "/results"))
+    setwd("..")
+    setwd(gsub("/", "\\\\\\\\", paste0(getwd(), "/results")))
     meanDataSets <- replaceValues(trainDataSets[[1]], trainDataSets[[2]], TRUE)
     
     write.table(trainDataSets[[2]], file=paste0(i, "_Y_TRAIN.txt"),
