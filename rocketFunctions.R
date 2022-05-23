@@ -333,6 +333,9 @@ rocket <- function (dataName, count, kernelCount, seed)
   trainDataSets <- readData(dataName, count, "TRAIN")
   testDataSets <- readData(dataName, count, "TEST")
   
+  write.table(trainDataSets[[2]], file="Y_TRAIN.txt", row.names=F, sep=",")
+  write.table(testDataSets[[2]], file="Y_TEST.txt", row.names=F, sep=",")
+  
   for (i in 1:10)
   {
     cat("Iteration", i, "of 10 \n")
@@ -342,9 +345,6 @@ rocket <- function (dataName, count, kernelCount, seed)
     setwd("..")
     setwd(gsub("/", "\\\\\\\\", paste0(getwd(), "/results")))
     meanDataSets <- replaceValues(trainDataSets[[1]], trainDataSets[[2]], TRUE)
-    
-    write.table(trainDataSets[[2]], file=paste0(i, "_Y_TRAIN.txt"),
-                row.names=F, sep=",")
     
     kernels <- generate_kernels(dim(trainDataSets[[1]])[3], kernelCount,
                                 count, seed)
@@ -360,9 +360,6 @@ rocket <- function (dataName, count, kernelCount, seed)
     
     meanDataSets <- replaceValues(testDataSets[[1]], testDataSets[[2]], TRUE)
     
-    write.table(testDataSets[[2]], file=paste0(i, "_Y_TEST.txt"),
-                row.names=F, sep=",")
-    
     cat("Test data set: \n")
     cat("Mean test data set: \n")
     
@@ -374,11 +371,11 @@ rocket <- function (dataName, count, kernelCount, seed)
   }
 }
 
-args = commandArgs(trailingOnly=TRUE)
+args = commandargs(trailingonly=true)
 
 if (length(args) != 4)
 {
-  stop("4 arguments must be supplied", call.=FALSE)
+  stop("4 arguments must be supplied", call.=false)
 }
 
 rocket(args[1], strtoi(args[2]), strtoi(args[3]), strtoi(args[4]))
