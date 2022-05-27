@@ -16,8 +16,8 @@ for k in [("BasicMotions", 6), ("Epilepsy", 3), ("Handwriting", 3), ("NATOPS", 2
     DIMENSIONS = k[1]
     KERNELS = 100
     SEED = 124
-    USE_MEAN = "FALSE"
-    ITERATION_COUNT = 1
+    USE_MEAN = "TRUE"
+    ITERATION_COUNT = 10
 
     print("Deleting previous results")
     print()
