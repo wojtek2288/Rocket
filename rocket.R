@@ -323,7 +323,7 @@ replaceValues <- function(dataSets, classes, useMean, seed)
   dataSets
 }
 
-rocket <- function (dataName, count, kernelCount, seed)
+rocket <- function (dataName, count, kernelCount, seed, useMean)
 {
   library("foreign")
   library("reticulate")
@@ -333,17 +333,17 @@ rocket <- function (dataName, count, kernelCount, seed)
   testDataSets <- readData(dataName, count, "TEST")
   
   setwd("..")
-  dir.create(paste0(getwd(), "/results"),
+  dir.create(paste0(getwd(), "/.results"),
               showWarnings = FALSE)
   
-  setwd(gsub("/", "\\\\\\\\", paste0(getwd(), "/results")))
+  setwd(gsub("/", "\\\\\\\\", paste0(getwd(), "/.results")))
   write.table(trainDataSets[[2]], file="Y_TRAIN.txt", row.names=F, sep=",")
   write.table(testDataSets[[2]], file="Y_TEST.txt", row.names=F, sep=",")
   
   for (i in 1:10)
   {
     cat("Iteration", i, "of 10 \n")
-    meanDataSets <- replaceValues(trainDataSets[[1]], trainDataSets[[2]], TRUE, i)
+    meanDataSets <- replaceValues(trainDataSets[[1]], trainDataSets[[2]], useMean, i)
     
     kernels <- generate_kernels(dim(trainDataSets[[1]])[3], kernelCount,
                                 count, seed)
@@ -354,9 +354,7 @@ rocket <- function (dataName, count, kernelCount, seed)
     write.table(res, file=paste0(i, "_Result_TRAIN.txt"),
                 row.names=F, sep=",")
     
-    meanDataSets <- replaceValues(testDataSets[[1]], testDataSets[[2]], TRUE, i)
-    
-    res <- apply_kernels(meanDataSets, kernels[[1]], kernels[[2]], kernels[[3]],
+    res <- apply_kernels(testDataSets[[1]], kernels[[1]], kernels[[2]], kernels[[3]],
                          kernels[[4]], kernels[[5]], kernels[[6]], kernels[[7]])
     
     write.table(res, file=paste0(i, "_Result_TEST.txt"),
@@ -366,12 +364,12 @@ rocket <- function (dataName, count, kernelCount, seed)
 
 args = commandArgs(trailingOnly=TRUE)
 
-if (length(args) != 4)
+if (length(args) != 5)
 {
   stop("4 arguments must be supplied", call.=FALSE)
 }
 
-rocket(args[1], strtoi(args[2]), strtoi(args[3]), strtoi(args[4]))
+rocket(args[1], strtoi(args[2]), strtoi(args[3]), strtoi(args[4]), as.logical(args[5]))
 
 
 

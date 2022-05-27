@@ -1,0 +1,120 @@
+Data for BasicMotions 6
+Score for 1: 0.95
+Score for 2: 0.95
+Score for 3: 0.95
+Score for 4: 1.0
+Score for 5: 0.975
+Score for 6: 0.975
+Score for 7: 0.975
+Score for 8: 0.975
+Score for 9: 0.95
+Score for 10: 0.975
+Result mean: 0.9674999999999999
+Result standard deviation: 0.016007810593582136
+Algorithm took 148.19196701049805 seconds 
+Average time per iteration: 14.819196701049805 seconds 
+Data for Epilepsy 3
+Score for 1: 0.9492753623188406
+Score for 2: 0.9347826086956522
+Score for 3: 0.927536231884058
+Score for 4: 0.9347826086956522
+Score for 5: 0.9202898550724637
+Score for 6: 0.927536231884058
+Score for 7: 0.9420289855072463
+Score for 8: 0.9130434782608695
+Score for 9: 0.9420289855072463
+Score for 10: 0.9130434782608695
+Result mean: 0.9304347826086957
+Result standard deviation: 0.011773968702370971
+Algorithm took 488.27163910865784 seconds 
+Average time per iteration: 48.827163910865785 seconds 
+Data for Handwriting 3
+Score for 1: 0.2235294117647059
+Score for 2: 0.2223529411764706
+Score for 3: 0.23294117647058823
+Score for 4: 0.23176470588235293
+Score for 5: 0.23647058823529413
+Score for 6: 0.21764705882352942
+Score for 7: 0.24235294117647058
+Score for 8: 0.2411764705882353
+Score for 9: 0.22705882352941176
+Score for 10: 0.21529411764705883
+Result mean: 0.22905882352941176
+Result standard deviation: 0.008945045602480169
+Algorithm took 1442.2351534366608 seconds 
+Average time per iteration: 144.22351534366607 seconds 
+Data for NATOPS 24
+Score for 1: 0.8166666666666667
+Score for 2: 0.8055555555555556
+Score for 3: 0.7888888888888889
+Score for 4: 0.8166666666666667
+Score for 5: 0.8111111111111111
+Score for 6: 0.8222222222222222
+Score for 7: 0.8
+Score for 8: 0.8055555555555556
+Score for 9: 0.8111111111111111
+Score for 10: 0.8277777777777777
+Result mean: 0.8105555555555556
+Result standard deviation: 0.010671873729054732
+Algorithm took 555.8788919448853 seconds 
+Average time per iteration: 55.587889194488525 seconds 
+Data for BasicMotions 6
+Score for 1: 0.975
+Score for 2: 0.975
+Score for 3: 0.95
+Score for 4: 1.0
+Score for 5: 0.975
+Score for 6: 0.975
+Score for 7: 0.975
+Score for 8: 0.975
+Score for 9: 0.95
+Score for 10: 0.975
+Result mean: 0.9724999999999999
+Result standard deviation: 0.013462912017836273
+Algorithm took 131.58104491233826 seconds 
+Average time per iteration: 13.158104491233825 seconds 
+Data for Epilepsy 3
+Score for 1: 0.9130434782608695
+Score for 2: 0.8768115942028986
+Score for 3: 0.9057971014492754
+Score for 4: 0.9347826086956522
+Score for 5: 0.9057971014492754
+Score for 6: 0.8913043478260869
+Score for 7: 0.9130434782608695
+Score for 8: 0.8840579710144928
+Score for 9: 0.9130434782608695
+Score for 10: 0.9130434782608695
+Result mean: 0.9050724637681158
+Result standard deviation: 0.016024162599634763
+Algorithm took 441.1778402328491 seconds 
+Average time per iteration: 44.11778402328491 seconds 
+Data for Handwriting 3
+Score for 1: 0.22470588235294117
+Score for 2: 0.2223529411764706
+Score for 3: 0.23294117647058823
+Score for 4: 0.22941176470588234
+Score for 5: 0.23176470588235293
+Score for 6: 0.2235294117647059
+Score for 7: 0.2411764705882353
+Score for 8: 0.23647058823529413
+Score for 9: 0.2188235294117647
+Score for 10: 0.21411764705882352
+Result mean: 0.2275294117647059
+Result standard deviation: 0.0078955114049706
+Algorithm took 1420.995980501175 seconds 
+Average time per iteration: 142.0995980501175 seconds 
+Data for NATOPS 24
+Score for 1: 0.6888888888888889
+Score for 2: 0.6777777777777778
+Score for 3: 0.7166666666666667
+Score for 4: 0.7555555555555555
+Score for 5: 0.7444444444444445
+Score for 6: 0.7722222222222223
+Score for 7: 0.7
+Score for 8: 0.7944444444444444
+Score for 9: 0.7611111111111111
+Score for 10: 0.8055555555555556
+Result mean: 0.7416666666666666
+Result standard deviation: 0.041961916890625985
+Algorithm took 550.2821187973022 seconds 
+Average time per iteration: 55.02821187973022 seconds 
