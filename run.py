@@ -6,8 +6,8 @@ from sklearn.linear_model import RidgeClassifierCV
 
 f = open("result.txt", "a")
 for k in [("BasicMotions", 6), ("Epilepsy", 3), ("Handwriting", 3), ("NATOPS", 24)]:
-    print(f"Data for {k[0]} k{1}")
-    f.write(f"Data for {k[0]} k{1}\n")
+    print(f"Data for {k[0]} {k[1]}")
+    f.write(f"Data for {k[0]} {k[1]}\n")
     DATASET_NAME = k[0]
     DIMENSIONS = k[1]
     KERNELS = 100
@@ -36,7 +36,7 @@ for k in [("BasicMotions", 6), ("Epilepsy", 3), ("Handwriting", 3), ("NATOPS", 2
 
     scores = []
 
-    for i in range(10):
+    for i in range(1):
         X_train_transform = np.loadtxt(f'{i + 1}_Result_TRAIN.txt', comments="#", delimiter=",", skiprows=1)
         X_test_transform = np.loadtxt(f'{i + 1}_Result_TEST.txt', comments="#", delimiter=",", skiprows=1)
         classifier = RidgeClassifierCV(alphas=np.logspace(-3, 3, 10))
@@ -50,5 +50,8 @@ for k in [("BasicMotions", 6), ("Epilepsy", 3), ("Handwriting", 3), ("NATOPS", 2
     f.write(f"Result mean: {sum(scores) / len(scores)}\n")
 
     os.chdir("..")
+    # odchylenie standardowe
+    # alpha
+    # logowanie z ridge CV
 
 f.close()
