@@ -1,0 +1,278 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{polski}
+
+\usepackage[letterpaper,top=3cm,bottom=3cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}
+
+\title {Algorytm ROCKET \\[1ex] \large Warsztaty z technik uczenia maszynowego}
+\author{Wojciech Klusek, Aleksander Kuś}
+\date{24 May 2022}
+
+\begin{document}
+
+\maketitle
+
+\section{Wstęp}
+Celem projektu było zaimplementowanie algorytmu ROCKET (RandOm Convolutional KErnel Transform) w języku R dla szeregów wielu zmiennych przy założeniu, że obserwacje mogą mieć różne długości. Algorytm ROCKET służy do klasyfikacji szeregów czasowych z wykorzystaniem dużych ilości losowych "kerneli", które mają parametry takie jak: "length", "weights, "bias", "dilation" oraz "padding".
+
+\section{Przygotowanie danych}
+Wstępne dane zostały pobrane ze strony timeseriesclassification.com. Do testów użyliśmy zestawów danych BasicMotions, Epilepsy, Handwriting oraz NATOP. Następnie pobrane dane przycięliśmy tak, aby obserwacje miały różne długości zgodnie z następującymi zasadami: 
+
+\subsubsection*{Dla każdej klasy}
+\begin{itemize}
+  \item 1/3 instancji będzie miała długość [10\%,40\%] oryginalnej długości
+  \item 1/3 instancji będzie miała długość (40\%,70\%] oryginalnej długości
+  \item 1/3 instancji będzie miała długość (70\%,100\%] oryginalnej długości
+\end{itemize}
+
+Skrócone instancje zostały następnie wypełnione średnią arytmetyczną wartości, które nie zostały przycięte dla danej instancji lub zerami.
+
+\section{Opis algorytmu ROCKET}
+Na wstępie generowana jest zadana ilość "kerneli" z odpowiednimi parametrami. Następnie są one aplikowane do danych treningowych oraz testowych. "Kernel" ma następujące parametry:
+
+\begin{itemize}
+  \item "Length" - losowo wybrana liczba ze zbioru \{ 7, 9, 11 \}
+  \item "Weights" - wartości z rozkładu normalnego $X \sim \mathcal{N}(0,1)$
+  \item "Bias" - wartość z rozkładu jednostajnego ciągłego $\mathcal{U}(0,1)$
+  \item "Dilation" - jest próbkowana w skali wykładniczej $d=\lfloor2^x\rfloor$, $x \sim \mathcal{U}(0,A)$, gdzie $A=\log_2\frac{l_input-1}{l_kernel-1}$
+  \item "Padding" - w momencie generacji "kernela" podejmowana jest losowa decyzja czy "padding" ma zostać użyty w momencie aplikowania "kernela" czy też nie. Bez paddingu "kernele" nie są wyśrodkowane w pierwszych i ostatnich $ \lfloor l_{kernel} - 1 \rfloor $ punktów.
+\end{itemize}
+
+Każdy "kernel" ($\omega$) z "Dilation" (d) jest aplikowany do każdego wejściowego szeregu czasowego (X) od pozycji i, według następującego wzoru: 
+$$X_{i} * \omega =  \sum_{j=0}^{l_{kernel} - 1} X_{i + (j \times	d)} \times	\omega_{j}. $$ 
+
+Rocket oblicza dwie zagregowane cechy z każdej mapy cech, tworząc
+dwie liczby rzeczywiste dla każdego "kernela":
+
+\begin{itemize}
+  \item maksymalna wartość
+  \item odsetek wartości dodatnich (ppv) 
+\end{itemize}
+
+\section{Uruchomienie programu}
+Do uruchomienia programu wymagane są następujące biblioteki:
+
+\subsubsection*{Dla R}
+\begin{itemize}
+  \item foreign
+  \item reticulate
+\end{itemize}
+
+Dla pakietu reticulate wymagana jest instalacja programu "miniconda". Pakiet ten wykorzystywany jest dla funkcji "array\_reshape()", której odpowiednika nie znaleźliśmy w czystym języku R.
+
+Instalacja powyższych zależności:
+\begin{verbatim}
+    install.packages(c("foreign", "reticulate"))
+    library("reticulate")
+    install_miniconda()
+\end{verbatim}
+
+\subsubsection*{Dla Pythona}
+\begin{itemize}
+  \item sktime
+  \item numpy
+\end{itemize}
+
+Z biblioteki sktime wykorzystywana jest klasa RidgeClassifierCV używana do oceniania poprawności algorytmu. Do uruchomienia projektu należy uruchomić plik run.py. Wyniki znajdują się w pliku results\_score.txt, natomiast współczynniki cech poszczególnych klas znajdują się w pliku results\_coefs.txt.
+
+\section{Przeprowadzone testy}
+
+Dla każdego wyżej opisanego zbioru danych przycięliśmy zbiory "train" i "test" według schematu opisanego powyżej oraz uruchomiliśmy nasz algorytm. Następnie wyniki przekazaliśmy do klasyfikatora w celu oceny. Proces ten powtórzyliśmy 10 razy z uwagi na brak determinizmu etapu przycinania danych, a otrzymane wyniki uśredniliśmy. Wyniki przedstawiono poniżej.
+
+\section{Wyniki}
+Wyniki zostały wyznaczone dla 100 "kerneli"
+
+\subsubsection*{BasicMotions}
+Parametry zbioru danych:
+\begin{itemize}
+  \item długość instancji TRAIN: 40
+  \item długość instancji TEST: 40
+  \item Długość szeregów: 100
+\end{itemize}
+
+\begin{center}
+\begin{tabular}{|c c c c|} 
+ \hline
+ Numer próby & Wynik dla średniej & Wynik dla zer & Wynik referencyjny \\ [0.5ex] 
+ \hline\hline
+ 1 & 0.95 & 0.975 & 0.9 \\ 
+ \hline
+ 2 & 0.95 & 0.975 & 0.9 \\
+ \hline
+ 3 & 0.95 & 0.95 & 0.9 \\
+ \hline
+ 4 & 1.0 & 1.0 & 0.9 \\
+ \hline
+  5 & 0.975 & 0.975 & 0.9 \\
+ \hline
+  6 & 0.975 & 0.975 & 0.9 \\
+ \hline
+  7 & 0.975 & 0.975 & 0.9 \\
+ \hline
+  8 & 0.975 & 0.975 & 0.9 \\
+ \hline
+  9 & 0.95 & 0.95 & 0.9 \\
+ \hline
+  10 & 0.975 & 0.975 & 0.9 \\
+ \hline
+ Średnia & 0.967 & 0.972 & 0.9 \\
+ \hline
+ Odchylenie standardowe & 0.016 & 0.013 & 0 \\
+  \hline
+ Średni czas iteracji & 14.81s & 13.15s & 16.37s \\
+ \hline
+\end{tabular}
+\end{center}
+
+\subsubsection*{Epilepsy}
+Parametry zbioru danych:
+\begin{itemize}
+  \item długość instancji TRAIN: 137
+  \item długość instancji TEST: 138
+  \item Długość szeregów: 206
+\end{itemize}
+
+\begin{center}
+\begin{tabular}{|c c c c|} 
+ \hline
+ Numer próby & Wynik dla średniej & Wynik dla zer & Wynik referencyjny \\ [0.5ex] 
+ \hline
+ 1 & 0.949 & 0.913 & 0.942 \\ 
+ \hline
+ 2 & 0.934 & 0.876 & 0.942 \\
+ \hline
+ 3 & 0.927 & 0.905 & 0.942 \\
+ \hline
+ 4 & 0.934 & 0.934 & 0.942 \\
+ \hline
+  5 & 0.920 & 0.905 & 0.942 \\
+ \hline
+  6 & 0.927 & 0.891 & 0.942 \\
+ \hline
+  7 & 0.942 & 0.913 & 0.942 \\
+ \hline
+  8 & 0.913 & 0.884 & 0.942 \\
+ \hline
+  9 & 0.942 & 0.913 & 0.942 \\
+ \hline
+  10 & 0.913 & 0.913 & 0.942 \\
+ \hline
+ Średnia & 0.93 & 0.905 & 0.942 \\
+ \hline
+ Odchylenie standardowe & 0.0117 & 0.016 & 0 \\  
+ \hline
+ Średni czas iteracji & 48.82s & 44.11s & 47.45s \\
+ \hline
+\end{tabular}
+\end{center}
+
+\subsubsection*{Handwriting}
+Parametry zbioru danych:
+\begin{itemize}
+  \item długość instancji TRAIN: 150
+  \item długość instancji TEST: 850
+  \item Długość szeregów: 152
+\end{itemize}
+
+\begin{center}
+\begin{tabular}{|c c c c|} 
+ \hline
+ Numer próby & Wynik dla średniej & Wynik dla zer & Wynik referencyjny \\ [0.5ex] 
+ \hline\hline
+ 1 & 0.223 & 0.224 & 0.248 \\ 
+ \hline
+ 2 & 0.222 & 0.222 & 0.248 \\
+ \hline
+ 3 & 0.232 & 0.232 & 0.248 \\
+ \hline
+ 4 & 0.231 & 0.229 & 0.248 \\
+ \hline
+  5 & 0.236 & 0.231 & 0.248 \\
+ \hline
+  6 & 0.217 & 0.223 & 0.248 \\
+ \hline
+  7 & 0.242 & 0.241 & 0.248 \\
+ \hline
+  8 & 0.241 & 0.236 & 0.248 \\
+ \hline
+  9 & 0.227 & 0.218 & 0.248 \\
+ \hline
+  10 & 0.215 & 0.214 & 0.248 \\
+ \hline
+  Średnia & 0.229 & 0.227 & 0.248 \\
+ \hline
+  Odchylenie standardowe & 0.0089 & 0.0078 & 0 \\
+ \hline
+  Średni czas iteracji & 144.22s & 142.09s & 144.88s \\
+ \hline
+\end{tabular}
+\end{center}
+
+\subsubsection*{NATOPS}
+Parametry zbioru danych:
+\begin{itemize}
+  \item długość instancji TRAIN: 180
+  \item długość instancji TEST: 180
+  \item Długość szeregów: 51
+\end{itemize}
+
+\begin{center}
+\begin{tabular}{|c c c c|} 
+ \hline
+ Numer próby & Wynik dla średniej & Wynik dla zer & Wynik referencyjny \\ [0.5ex] 
+ \hline\hline
+ 1 & 0.816 & 0.688 & 0.827 \\
+ \hline
+ 2 & 0.805 & 0.677 & 0.827 \\
+ \hline
+ 3 & 0.788 & 0.716 & 0.827 \\
+ \hline
+ 4 & 0.816 & 0.755 & 0.827 \\
+ \hline
+  5 & 0.811 & 0.744 & 0.827 \\
+ \hline
+  6 & 0.822 & 0.772 & 0.827 \\
+ \hline
+  7 & 0.800 & 0.700 & 0.827 \\
+ \hline
+  8 & 0.805 & 0.794 & 0.827 \\
+ \hline
+  9 & 0.811 & 0.761 & 0.827 \\
+ \hline
+  10 & 0.827 & 0.805 & 0.827 \\
+ \hline
+ Średnia & 0.810 & 0.741 & 0.827 \\
+ \hline
+ Odchylenie standardowe & 0.0106 & 0.0419 & 0 \\
+ \hline
+ Średni czas iteracji & 55.58s & 55.02s & 59.41s \\
+ \hline
+\end{tabular}
+\end{center}
+
+\section{Wnioski}
+
+Z przeprowadzonych eksperymentów wynika, że dokładność algorytmu dla danych nieobciętych jest największa. Obcinanie danych i wypełnianie obciętych wartości zerami daje lepsze rezultaty niż wypełnianie wartością średnią pozostałych elementów. Dla zbioru "Handwriting", dla którego ilość instancji w zbiorze treningowym jest dużo mniejsza od tych w zbiorze testowym, dokładność była najmniejsza. Obcinanie danych ma różny wpływ na dokładność w różnych zbiorach. W zbiorze NATOPS, gdzie długość szeregów była najmniejsza, obcinanie danych miało największy wpływ.
+
+\section{Bibliografia}
+
+\begingroup
+\renewcommand{\section}[2]{}%
+\begin{thebibliography}{9}
+
+\bibitem{sk1}
+https://github.com/alan-turing-institute/sktime/blob/main/
+
+sktime/transformations/panel/rocket/\_rocket.py
+
+\bibitem{sk2}
+https://github.com/alan-turing-institute/sktime/blob/main/
+
+examples/rocket.ipynb
+
+\bibitem{ang1}
+https://github.com/angus924/rocket
+\end{thebibliography}
+\endgroup
+
+\end{document}

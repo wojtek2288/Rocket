@@ -118,3 +118,27 @@ Result mean: 0.7416666666666666
 Result standard deviation: 0.041961916890625985
 Algorithm took 550.2821187973022 seconds 
 Average time per iteration: 55.02821187973022 seconds 
+Data for BasicMotions 6
+Score for 1: 0.9
+Result mean: 0.9
+Result standard deviation: 0.0
+Algorithm took 16.373023748397827 seconds 
+Average time per iteration: 16.373023748397827 seconds 
+Data for Epilepsy 3
+Score for 1: 0.9420289855072463
+Result mean: 0.9420289855072463
+Result standard deviation: 0.0
+Algorithm took 47.4557683467865 seconds 
+Average time per iteration: 47.4557683467865 seconds 
+Data for Handwriting 3
+Score for 1: 0.24823529411764705
+Result mean: 0.24823529411764705
+Result standard deviation: 0.0
+Algorithm took 144.88525295257568 seconds 
+Average time per iteration: 144.88525295257568 seconds 
+Data for NATOPS 24
+Score for 1: 0.8277777777777777
+Result mean: 0.8277777777777777
+Result standard deviation: 0.0
+Algorithm took 59.41746926307678 seconds 
+Average time per iteration: 59.41746926307678 seconds 

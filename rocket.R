@@ -340,15 +340,15 @@ rocket <- function (dataName, count, kernelCount, seed, useMean)
   write.table(trainDataSets[[2]], file="Y_TRAIN.txt", row.names=F, sep=",")
   write.table(testDataSets[[2]], file="Y_TEST.txt", row.names=F, sep=",")
   
-  for (i in 1:10)
+  for (i in 1:1)
   {
     cat("Iteration", i, "of 10 \n")
-    meanDataSets <- replaceValues(trainDataSets[[1]], trainDataSets[[2]], useMean, i)
+    #meanDataSets <- replaceValues(trainDataSets[[1]], trainDataSets[[2]], useMean, i)
     
     kernels <- generate_kernels(dim(trainDataSets[[1]])[3], kernelCount,
                                 count, seed)
     
-    res <- apply_kernels(meanDataSets, kernels[[1]], kernels[[2]], kernels[[3]],
+    res <- apply_kernels(trainDataSets[[1]], kernels[[1]], kernels[[2]], kernels[[3]],
                          kernels[[4]], kernels[[5]], kernels[[6]], kernels[[7]])
     
     write.table(res, file=paste0(i, "_Result_TRAIN.txt"),
